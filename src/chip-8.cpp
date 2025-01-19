@@ -5,14 +5,12 @@
 
 #include "chip-8.hpp"
 
-namespace Emulation
+namespace Emulator
 {
 
-CHIP_8::CHIP_8()
+CHIP_8::CHIP_8() : m_opcodes_table(InitOpcodesTable())
 {   
-    for (std::size_t i = 0; i < NUM_OF_FONTS; ++i) {
-        m_memory[i] = s_font_set[i];
-    }
+    LoadFonts(m_memory);
 }
 
 CHIP_8::Status CHIP_8::LoadBin(const char *file_path) {
@@ -40,12 +38,12 @@ void CHIP_8::EmulateCycle() {
     if (0x0000 == first_4_bits) {
         uint16_t last_4_bits = opcode & 0x000F;
         if (m_opcodes_table.end() != m_opcodes_table.find(last_4_bits)) {
-            m_opcodes_table[last_4_bits](opcode);
+            m_opcodes_table[last_4_bits](this);
         } else {
             std::cout << "unknown opcode [0x0000]: " << opcode << '\n';
         } 
     } else if (m_opcodes_table.end() != m_opcodes_table.find(first_4_bits)) {
-        m_opcodes_table[first_4_bits](opcode);
+        m_opcodes_table[first_4_bits](this);
     } else {
         std::cout << "unknown opcode: " << opcode << '\n';
     }
@@ -60,6 +58,29 @@ void CHIP_8::EmulateCycle() {
         }
         --m_sound_timer;
     }
+}
+
+inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
+    for (std::size_t i = 0; i < NUM_OF_FONTS; ++i) {
+        memory[i] = s_font_set[i];
+    }
+}
+
+inline std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> CHIP_8::InitOpcodesTable() {
+    std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> opcodes_table = 
+    {
+        {0x200, &Op0x200},
+    }; 
+
+    return opcodes_table;
+}
+
+void CHIP_8::Op0x200(CHIP_8 *chip) {
+    constexpr uint16_t ADDR_NNN = 0x0FFF;
+
+    chip->m_stack[chip->m_stack.GetSP()] = chip->m_pc;
+    chip->m_stack.MoveSP(1);
+    chip->m_pc = chip->m_opcode & ADDR_NNN;
 }
 
 } // Emulation

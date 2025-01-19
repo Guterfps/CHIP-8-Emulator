@@ -4,7 +4,7 @@
 #include <array>
 #include <cstdint>
 
-namespace Emulation
+namespace Emulator
 {
 
 class KeyPad

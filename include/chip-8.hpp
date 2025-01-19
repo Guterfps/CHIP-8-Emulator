@@ -10,7 +10,7 @@
 #include "stack.hpp"
 #include "key_pad.hpp"
 
-namespace Emulation
+namespace Emulator
 {
 
 class CHIP_8
@@ -40,14 +40,20 @@ private:
     std::array<unsigned char, MEMORY_SIZE> m_memory{0};
     std::array<unsigned char, NUM_OF_REGIDTERS> m_regs_V{0};
     std::bitset<NUM_OF_PIXELS> m_pixels{0};
-    std::unordered_map<uint16_t, std::function<void(uint16_t)>> m_opcodes_table;
+    std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> m_opcodes_table;
     Stack m_stack;
     KeyPad m_key_pad;
     uint16_t m_index_reg{0};
     uint16_t m_pc{PROGRAM_START_ADDR};
+    uint16_t m_opcode{0};
     uint16_t m_delay_timer{0};
     uint16_t m_sound_timer{0};
     bool m_draw_flag{false};
+
+    static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
+    static std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> InitOpcodesTable();
+
+    static void Op0x200(CHIP_8 *chip);
 
     static constexpr std::array<uint8_t, NUM_OF_FONTS> s_font_set = 
     {
