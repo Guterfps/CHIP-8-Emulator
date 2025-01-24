@@ -64,7 +64,7 @@ void CHIP_8::EmulateCycle() {
 
 inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
     for (std::size_t i = 0; i < NUM_OF_FONTS; ++i) {
-        memory[i] = s_fonts_set[i];
+        memory[i] = s_font_set[i];
     }
 }
 
@@ -81,7 +81,7 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
     {0x200, &Op0x200}
 };
 
-const std::array<uint8_t, CHIP_8::NUM_OF_FONTS> CHIP_8::s_fonts_set =
+const std::array<uint8_t, CHIP_8::NUM_OF_FONTS> CHIP_8::s_font_set =
 {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1

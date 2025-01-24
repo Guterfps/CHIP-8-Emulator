@@ -54,7 +54,7 @@ private:
     static void Op0x200(CHIP_8 *chip);
 
     static const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> s_opcode_tabale;
-    static const std::array<uint8_t, NUM_OF_FONTS> s_fonts_set;
+    static const std::array<uint8_t, NUM_OF_FONTS> s_font_set;
 
 };
 
