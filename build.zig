@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const zcc = @import("compile_commands");
+
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -58,6 +60,21 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.linkLibCpp();
     exe.linkSystemLibrary("raylib");
+
+    // compile_commands.json
+    // make a list of targets that have include files and c source files
+    var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
+    // keep track of it, so later we can pass it to compile_commands
+    targets.append(exe) catch @panic("OOM");
+    // maybe some other targets, too?
+    //targets.append(exe_2) catch @panic("OOM");
+    // if this is an output, append it. but if exe or exe_2 links it, then it
+    // will get pulled in automatically
+    // targets.append(lib) catch @panic("OOM");
+
+    // add a step called "cdb" (Compile commands DataBase) for making
+    // compile_commands.json. could be named anything. cdb is just quick to type
+    zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
