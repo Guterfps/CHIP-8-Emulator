@@ -30,7 +30,7 @@ public:
 
 private:
     static constexpr std::size_t MEMORY_SIZE = 4096;
-    static constexpr std::size_t NUM_OF_REGIDTERS = 16;
+    static constexpr std::size_t NUM_OF_REGISTERS = 16;
     static constexpr std::size_t SCREEN_WIDTH = 32;
     static constexpr std::size_t SCREEN_HIGHT = 64;
     static constexpr std::size_t NUM_OF_PIXELS = SCREEN_HIGHT * SCREEN_WIDTH;
@@ -38,7 +38,7 @@ private:
     static constexpr std::size_t NUM_OF_FONTS = 80;
     
     std::array<unsigned char, MEMORY_SIZE> m_memory{0};
-    std::array<unsigned char, NUM_OF_REGIDTERS> m_regs_V{0};
+    std::array<unsigned char, NUM_OF_REGISTERS> m_regs_V{0};
     std::bitset<NUM_OF_PIXELS> m_pixels{0};
     Stack m_stack;
     KeyPad m_key_pad;
@@ -51,7 +51,21 @@ private:
 
     static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
 
-    static void Op0x200(CHIP_8 *chip);
+    static void Op0x2NNN(CHIP_8 *chip);
+    static void Op0x1NNN(CHIP_8 *chip);
+    static void Op0x00EE(CHIP_8 *chip);
+
+    static void Op0x3XNN(CHIP_8 *chip);
+    static void Op0x4XNN(CHIP_8 *chip);
+    static void Op0x5XY0(CHIP_8 *chip);
+
+    static void Op0x6XNN(CHIP_8 *chip);
+    static void Op0x7XNN(CHIP_8 *chip);
+
+    static void Op0x8XY0(CHIP_8 *chip);
+    static void Op0x8XY1(CHIP_8 *chip);
+    static void Op0x8XY2(CHIP_8 *chip);
+    static void Op0x8XY3(CHIP_8 *chip);
 
     static const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> s_opcode_tabale;
     static const std::array<uint8_t, NUM_OF_FONTS> s_font_set;

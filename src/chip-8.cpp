@@ -34,20 +34,20 @@ CHIP_8::Status CHIP_8::LoadBin(const char *file_path) {
 }
 
 void CHIP_8::EmulateCycle() {
-    uint16_t opcode = m_memory[m_pc] << 8 | m_memory[m_pc + 1];
+    m_opcode = (m_memory[m_pc] << 8) | m_memory[m_pc + 1];
     
-    uint16_t first_4_bits = opcode & 0xF000;
+    uint16_t first_4_bits = m_opcode & 0xF000;
     if (0x0000 == first_4_bits) {
-        uint16_t last_4_bits = opcode & 0x000F;
+        uint16_t last_4_bits = m_opcode & 0x000F;
         if (s_opcode_tabale.end() != s_opcode_tabale.find(last_4_bits)) {
             s_opcode_tabale.at(last_4_bits)(this);
         } else {
-            std::cout << "unknown opcode [0x0000]: " << opcode << '\n';
+            std::cout << "unknown opcode [0x0000]: " << m_opcode << '\n';
         } 
     } else if (s_opcode_tabale.end() != s_opcode_tabale.find(first_4_bits)) {
         s_opcode_tabale.at(first_4_bits)(this);
     } else {
-        std::cout << "unknown opcode: " << opcode << '\n';
+        std::cout << "unknown opcode: " << m_opcode << '\n';
     }
 
     if (m_delay_timer > 0) {
@@ -68,17 +68,46 @@ inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
     }
 }
 
-void CHIP_8::Op0x200(CHIP_8 *chip) {
+void CHIP_8::Op0x1NNN(CHIP_8 *chip) {
     constexpr uint16_t ADDR_NNN = 0x0FFF;
 
-    chip->m_stack[chip->m_stack.GetSP()] = chip->m_pc;
-    chip->m_stack.MoveSP(1);
+    chip->m_pc = chip->m_opcode & ADDR_NNN; 
+}
+
+void CHIP_8::Op0x2NNN(CHIP_8 *chip) {
+    constexpr uint16_t ADDR_NNN = 0x0FFF;
+
+    chip->m_stack.Push(chip->m_pc);
     chip->m_pc = chip->m_opcode & ADDR_NNN;
+}
+
+void CHIP_8::Op0x00EE(CHIP_8 *chip) {
+   chip->m_pc = chip->m_stack.Pop();
+   chip->m_pc += 2;
+}
+
+void CHIP_8::Op0x3XNN(CHIP_8 *chip) {
+    constexpr uint16_t VAL_NN = 0x00FF;
+    constexpr uint16_t REG_X = 0x0F00;
+
+    uint16_t amount_to_move = 2;
+
+    if ((chip->m_opcode & VAL_NN) == (chip->m_regs_V[chip->m_opcode & REG_X])) {
+        amount_to_move += 2;
+    }
+    
+    chip->m_pc += amount_to_move;
 }
 
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
-    {0x200, &Op0x200}
+    // flow operations
+    {0x1000, &Op0x1NNN},
+    {0x2000, &Op0x2NNN},
+    {0x00EE, &Op0x00EE},
+    
+    {0x3000, &Op0x3XNN}
+    
 };
 
 const std::array<uint8_t, CHIP_8::NUM_OF_FONTS> CHIP_8::s_font_set =
