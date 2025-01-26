@@ -50,7 +50,8 @@ private:
     bool m_draw_flag{false};
 
     static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
-
+    static void MoveToNextOp(uint16_t *pc);
+    
     static void Op0x2NNN(CHIP_8 *chip);
     static void Op0x1NNN(CHIP_8 *chip);
     static void Op0x00EE(CHIP_8 *chip);

@@ -68,6 +68,12 @@ inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
     }
 }
 
+inline void CHIP_8::MoveToNextOp(uint16_t *pc) {
+    constexpr uint16_t SIZE_OF_OPCODE = 2;
+    
+    *pc += SIZE_OF_OPCODE;
+}
+
 void CHIP_8::Op0x1NNN(CHIP_8 *chip) {
     constexpr uint16_t ADDR_NNN = 0x0FFF;
 
@@ -83,30 +89,105 @@ void CHIP_8::Op0x2NNN(CHIP_8 *chip) {
 
 void CHIP_8::Op0x00EE(CHIP_8 *chip) {
    chip->m_pc = chip->m_stack.Pop();
-   chip->m_pc += 2;
+   MoveToNextOp(&(chip->m_pc));
 }
 
 void CHIP_8::Op0x3XNN(CHIP_8 *chip) {
     constexpr uint16_t VAL_NN = 0x00FF;
     constexpr uint16_t REG_X = 0x0F00;
 
+    uint16_t opcode = chip->m_opcode;
     uint16_t amount_to_move = 2;
 
-    if ((chip->m_opcode & VAL_NN) == (chip->m_regs_V[chip->m_opcode & REG_X])) {
+    if ((opcode & VAL_NN) ==
+        (chip->m_regs_V[opcode & REG_X])) {
         amount_to_move += 2;
     }
     
     chip->m_pc += amount_to_move;
 }
 
+void CHIP_8::Op0x4XNN(CHIP_8 *chip) {
+    constexpr uint16_t VAL_NN = 0x00FF;
+    constexpr uint16_t REG_X = 0x0F00;
+
+    uint16_t opcode = chip->m_opcode;
+    uint16_t amount_to_move = 2;
+
+    if ((opcode & VAL_NN) !=
+        (chip->m_regs_V[opcode & REG_X])) {
+        amount_to_move += 2;
+    }
+    
+    chip->m_pc += amount_to_move;
+}
+
+void CHIP_8::Op0x5XY0(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    uint16_t amount_to_move = 2;
+
+    if ((chip->m_regs_V[opcode & REG_X]) ==
+        (chip->m_regs_V[opcode & REG_Y])) {
+        amount_to_move += 2;
+    }
+    
+    chip->m_pc += amount_to_move;
+}
+
+void CHIP_8::Op0x6XNN(CHIP_8 *chip) {
+    constexpr uint16_t VAL_NN = 0x00FF;
+    constexpr uint16_t REG_X = 0x0F00;
+
+    uint16_t opcode = chip->m_opcode;
+
+    chip->m_regs_V[opcode & REG_X] = opcode & VAL_NN;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x7XNN(CHIP_8 *chip) {
+    constexpr uint16_t VAL_NN = 0x00FF;
+    constexpr uint16_t REG_X = 0x0F00;
+
+    uint16_t opcode = chip->m_opcode;
+
+    chip->m_regs_V[opcode & REG_X] += opcode & VAL_NN;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY0(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+
+    chip->m_regs_V[opcode & REG_X] = chip->m_regs_V[opcode & REG_Y];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
-    // flow operations
+    // Flow operations
     {0x1000, &Op0x1NNN},
     {0x2000, &Op0x2NNN},
-    {0x00EE, &Op0x00EE},
-    
-    {0x3000, &Op0x3XNN}
+    {0x000E, &Op0x00EE},
+
+    // Cond operations 
+    {0x3000, &Op0x3XNN},
+    {0x4000, &Op0x4XNN},
+    {0x5000, &Op0x5XY0},
+
+    // Const operations
+    {0x6000, &Op0x6XNN},
+    {0x7000, &Op0x7XNN},
+
+    // Assig operations
+    {0x8000, &Op0x8XY0},
     
 };
 
