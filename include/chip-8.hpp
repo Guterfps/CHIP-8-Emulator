@@ -67,7 +67,13 @@ private:
     static void Op0x8XY1(CHIP_8 *chip);
     static void Op0x8XY2(CHIP_8 *chip);
     static void Op0x8XY3(CHIP_8 *chip);
+    static void Op0x8XY6(CHIP_8 *chip);
+    static void Op0x8XYE(CHIP_8 *chip);
 
+    static void Op0x8XY4(CHIP_8 *chip);
+    static void Op0x8XY5(CHIP_8 *chip);
+    static void Op0x8XY7(CHIP_8 *chip);
+    
     static const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> s_opcode_tabale;
     static const std::array<uint8_t, NUM_OF_FONTS> s_font_set;
 

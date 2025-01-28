@@ -98,9 +98,10 @@ void CHIP_8::Op0x3XNN(CHIP_8 *chip) {
 
     uint16_t opcode = chip->m_opcode;
     uint16_t amount_to_move = 2;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
     if ((opcode & VAL_NN) ==
-        (chip->m_regs_V[opcode & REG_X])) {
+        (chip->m_regs_V[regx_indx])) {
         amount_to_move += 2;
     }
     
@@ -113,9 +114,10 @@ void CHIP_8::Op0x4XNN(CHIP_8 *chip) {
 
     uint16_t opcode = chip->m_opcode;
     uint16_t amount_to_move = 2;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
     if ((opcode & VAL_NN) !=
-        (chip->m_regs_V[opcode & REG_X])) {
+        (chip->m_regs_V[regx_indx])) {
         amount_to_move += 2;
     }
     
@@ -128,9 +130,11 @@ void CHIP_8::Op0x5XY0(CHIP_8 *chip) {
 
     uint16_t opcode = chip->m_opcode;
     uint16_t amount_to_move = 2;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4; 
 
-    if ((chip->m_regs_V[opcode & REG_X]) ==
-        (chip->m_regs_V[opcode & REG_Y])) {
+    if ((chip->m_regs_V[regx_indx]) ==
+        (chip->m_regs_V[regy_indx])) {
         amount_to_move += 2;
     }
     
@@ -142,8 +146,9 @@ void CHIP_8::Op0x6XNN(CHIP_8 *chip) {
     constexpr uint16_t REG_X = 0x0F00;
 
     uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
-    chip->m_regs_V[opcode & REG_X] = opcode & VAL_NN;
+    chip->m_regs_V[regx_indx] = opcode & VAL_NN;
 
     MoveToNextOp(&(chip->m_pc));
 }
@@ -153,8 +158,9 @@ void CHIP_8::Op0x7XNN(CHIP_8 *chip) {
     constexpr uint16_t REG_X = 0x0F00;
 
     uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
-    chip->m_regs_V[opcode & REG_X] += opcode & VAL_NN;
+    chip->m_regs_V[regx_indx] += opcode & VAL_NN;
 
     MoveToNextOp(&(chip->m_pc));
 }
@@ -164,11 +170,132 @@ void CHIP_8::Op0x8XY0(CHIP_8 *chip) {
     constexpr uint16_t REG_Y = 0x00F0;
 
     uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4; 
 
-    chip->m_regs_V[opcode & REG_X] = chip->m_regs_V[opcode & REG_Y];
+    chip->m_regs_V[regx_indx] = chip->m_regs_V[regy_indx];
 
     MoveToNextOp(&(chip->m_pc));
 }
+
+void CHIP_8::Op0x8XY1(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[regx_indx] |= chip->m_regs_V[regy_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY2(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[regx_indx] &= chip->m_regs_V[regy_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY3(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[regx_indx] ^= chip->m_regs_V[regy_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY4(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[0x0F] = (chip->m_regs_V[regx_indx] >
+                            (0xFF - chip->m_regs_V[regy_indx])) ?
+                            1 : 0;
+
+    chip->m_regs_V[regx_indx] += chip->m_regs_V[regy_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY5(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[0x0F] = (chip->m_regs_V[regx_indx] <
+                            chip->m_regs_V[regy_indx]) ?
+                            0 : 1;
+
+    chip->m_regs_V[regx_indx] -= chip->m_regs_V[regy_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY6(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint8_t LSB = 1;
+    
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> LSB;
+
+    chip->m_regs_V[0x0F] = chip->m_regs_V[regx_indx] & 1;
+
+    chip->m_regs_V[regx_indx] >>= 1;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XY7(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+
+    chip->m_regs_V[0x0F] = (chip->m_regs_V[regx_indx] >
+                            chip->m_regs_V[regy_indx]) ?
+                            0 : 1;
+    
+    chip->m_regs_V[regx_indx] = chip->m_regs_V[regy_indx] - chip->m_regs_V[regx_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0x8XYE(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint8_t MSB = 1 << 7;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+
+    chip->m_regs_V[0x0F] = chip->m_regs_V[regx_indx] & MSB;
+
+    chip->m_regs_V[regx_indx] <<= 1;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
 
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
@@ -188,6 +315,19 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
 
     // Assig operations
     {0x8000, &Op0x8XY0},
+
+    // BitOp
+    {0x8001, &Op0x8XY1},
+    {0x8002, &Op0x8XY2},
+    {0x8003, &Op0x8XY3},
+    {0x8006, &Op0x8XY6},
+    {0x800E, &Op0x8XYE},
+
+    // Math operations
+    {0x8004, &Op0x8XY4},
+    {0x8005, &Op0x8XY5},
+    {0x8007, &Op0x8XY7},
+    
     
 };
 
