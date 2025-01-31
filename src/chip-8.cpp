@@ -35,20 +35,15 @@ CHIP_8::Status CHIP_8::LoadBin(const char *file_path) {
 
 void CHIP_8::EmulateCycle() {
     m_opcode = (m_memory[m_pc] << 8) | m_memory[m_pc + 1];
-    
-    uint16_t first_4_bits = m_opcode & 0xF000;
-    if (0x0000 == first_4_bits) {
-        uint16_t last_4_bits = m_opcode & 0x000F;
-        if (s_opcode_tabale.end() != s_opcode_tabale.find(last_4_bits)) {
-            s_opcode_tabale.at(last_4_bits)(this);
-        } else {
-            std::cout << "unknown opcode [0x0000]: " << m_opcode << '\n';
-        } 
-    } else if (s_opcode_tabale.end() != s_opcode_tabale.find(first_4_bits)) {
-        s_opcode_tabale.at(first_4_bits)(this);
+
+    uint16_t table_index = FindOpcodeTableIndex(m_opcode);
+
+    if (s_opcode_tabale.end() != s_opcode_tabale.find(table_index)) {
+        s_opcode_tabale.at(table_index)(this);
     } else {
         std::cout << "unknown opcode: " << m_opcode << '\n';
     }
+    
 
     if (m_delay_timer > 0) {
         --m_delay_timer;
@@ -60,6 +55,44 @@ void CHIP_8::EmulateCycle() {
         }
         --m_sound_timer;
     }
+}
+
+inline uint16_t CHIP_8::FindOpcodeTableIndex(uint16_t opcode) {
+    constexpr uint16_t FIRST_4_BITS = 0xF000;
+    constexpr uint16_t LAST_4_BITS = 0x000F;
+    constexpr uint16_t LAST_8_BITS = 0x00FF;
+    
+    uint16_t table_index = opcode & FIRST_4_BITS;
+
+    switch (table_index)
+    {
+        case 0x0000:
+        {
+            table_index |= opcode & LAST_8_BITS;
+            break;
+        }
+        case 0x8000:
+        {
+            table_index |= opcode & LAST_4_BITS;
+            break;
+        }
+        case 0xE000:
+        {
+            table_index |= opcode & LAST_8_BITS;
+            break;
+        }
+        case 0xF000:
+        {
+            table_index |= opcode & LAST_8_BITS;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    return table_index;
 }
 
 inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
@@ -296,18 +329,37 @@ void CHIP_8::Op0x8XYE(CHIP_8 *chip) {
     MoveToNextOp(&(chip->m_pc));
 }
 
+void CHIP_8::Op0x9XY0(CHIP_8 *chip) {
+    constexpr uint16_t REG_X = 0x0F00;
+    constexpr uint16_t REG_Y = 0x00F0;
+
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+    uint16_t amount_to_move = 2;
+
+    if (chip->m_regs_V[regx_indx] !=
+        chip->m_regs_V[regy_indx]) {
+        amount_to_move += 2;
+    }
+    
+    chip->m_pc += amount_to_move;
+}
+
+
 
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
     // Flow operations
     {0x1000, &Op0x1NNN},
     {0x2000, &Op0x2NNN},
-    {0x000E, &Op0x00EE},
+    {0x00EE, &Op0x00EE},
 
     // Cond operations 
     {0x3000, &Op0x3XNN},
     {0x4000, &Op0x4XNN},
     {0x5000, &Op0x5XY0},
+    {0x9000, &Op0x9XY0},
 
     // Const operations
     {0x6000, &Op0x6XNN},

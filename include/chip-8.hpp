@@ -51,14 +51,17 @@ private:
 
     static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
     static void MoveToNextOp(uint16_t *pc);
+    static uint16_t FindOpcodeTableIndex(uint16_t opcode);
     
     static void Op0x2NNN(CHIP_8 *chip);
     static void Op0x1NNN(CHIP_8 *chip);
     static void Op0x00EE(CHIP_8 *chip);
+    static void Op0xBNNN(CHIP_8 *chip);
 
     static void Op0x3XNN(CHIP_8 *chip);
     static void Op0x4XNN(CHIP_8 *chip);
     static void Op0x5XY0(CHIP_8 *chip);
+    static void Op0x9XY0(CHIP_8 *chip);
 
     static void Op0x6XNN(CHIP_8 *chip);
     static void Op0x7XNN(CHIP_8 *chip);
@@ -73,6 +76,21 @@ private:
     static void Op0x8XY4(CHIP_8 *chip);
     static void Op0x8XY5(CHIP_8 *chip);
     static void Op0x8XY7(CHIP_8 *chip);
+
+    static void Op0xANNN(CHIP_8 *chip);
+    static void Op0xCXNN(CHIP_8 *chip);
+    static void Op0xDXYN(CHIP_8 *chip);
+    static void Op0xEX9E(CHIP_8 *chip);
+    static void Op0xEXA1(CHIP_8 *chip);
+    static void Op0xFX07(CHIP_8 *chip);
+    static void Op0xFX0A(CHIP_8 *chip);
+    static void Op0xFX15(CHIP_8 *chip);
+    static void Op0xFX18(CHIP_8 *chip);
+    static void Op0xFX1E(CHIP_8 *chip);
+    static void Op0xFX29(CHIP_8 *chip);
+    static void Op0xFX33(CHIP_8 *chip);
+    static void Op0xFX55(CHIP_8 *chip);
+    static void Op0xFX65(CHIP_8 *chip);
     
     static const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> s_opcode_tabale;
     static const std::array<uint8_t, NUM_OF_FONTS> s_font_set;
