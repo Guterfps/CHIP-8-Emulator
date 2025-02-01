@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <unordered_map>
+#include <random>
 
 #include "chip-8.hpp"
 
@@ -102,20 +103,14 @@ inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
 }
 
 inline void CHIP_8::MoveToNextOp(uint16_t *pc) {
-    constexpr uint16_t SIZE_OF_OPCODE = 2;
-    
     *pc += SIZE_OF_OPCODE;
 }
 
 void CHIP_8::Op0x1NNN(CHIP_8 *chip) {
-    constexpr uint16_t ADDR_NNN = 0x0FFF;
-
     chip->m_pc = chip->m_opcode & ADDR_NNN; 
 }
 
 void CHIP_8::Op0x2NNN(CHIP_8 *chip) {
-    constexpr uint16_t ADDR_NNN = 0x0FFF;
-
     chip->m_stack.Push(chip->m_pc);
     chip->m_pc = chip->m_opcode & ADDR_NNN;
 }
@@ -126,58 +121,46 @@ void CHIP_8::Op0x00EE(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x3XNN(CHIP_8 *chip) {
-    constexpr uint16_t VAL_NN = 0x00FF;
-    constexpr uint16_t REG_X = 0x0F00;
-
     uint16_t opcode = chip->m_opcode;
-    uint16_t amount_to_move = 2;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
     if ((opcode & VAL_NN) ==
         (chip->m_regs_V[regx_indx])) {
-        amount_to_move += 2;
+        amount_to_move += SIZE_OF_OPCODE;
     }
     
     chip->m_pc += amount_to_move;
 }
 
 void CHIP_8::Op0x4XNN(CHIP_8 *chip) {
-    constexpr uint16_t VAL_NN = 0x00FF;
-    constexpr uint16_t REG_X = 0x0F00;
-
     uint16_t opcode = chip->m_opcode;
-    uint16_t amount_to_move = 2;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
     if ((opcode & VAL_NN) !=
         (chip->m_regs_V[regx_indx])) {
-        amount_to_move += 2;
+        amount_to_move += SIZE_OF_OPCODE;
     }
     
     chip->m_pc += amount_to_move;
 }
 
 void CHIP_8::Op0x5XY0(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
-    uint16_t amount_to_move = 2;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4; 
 
     if ((chip->m_regs_V[regx_indx]) ==
         (chip->m_regs_V[regy_indx])) {
-        amount_to_move += 2;
+        amount_to_move += SIZE_OF_OPCODE;
     }
     
     chip->m_pc += amount_to_move;
 }
 
 void CHIP_8::Op0x6XNN(CHIP_8 *chip) {
-    constexpr uint16_t VAL_NN = 0x00FF;
-    constexpr uint16_t REG_X = 0x0F00;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
@@ -187,9 +170,6 @@ void CHIP_8::Op0x6XNN(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x7XNN(CHIP_8 *chip) {
-    constexpr uint16_t VAL_NN = 0x00FF;
-    constexpr uint16_t REG_X = 0x0F00;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
@@ -199,9 +179,6 @@ void CHIP_8::Op0x7XNN(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY0(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4; 
@@ -212,9 +189,6 @@ void CHIP_8::Op0x8XY0(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY1(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -225,9 +199,6 @@ void CHIP_8::Op0x8XY1(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY2(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -238,9 +209,6 @@ void CHIP_8::Op0x8XY2(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY3(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -251,9 +219,6 @@ void CHIP_8::Op0x8XY3(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY4(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -268,9 +233,6 @@ void CHIP_8::Op0x8XY4(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY5(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -285,7 +247,6 @@ void CHIP_8::Op0x8XY5(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY6(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
     constexpr uint8_t LSB = 1;
     
     uint16_t opcode = chip->m_opcode;
@@ -299,9 +260,6 @@ void CHIP_8::Op0x8XY6(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XY7(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
@@ -316,7 +274,6 @@ void CHIP_8::Op0x8XY7(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x8XYE(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
     constexpr uint8_t MSB = 1 << 7;
 
     uint16_t opcode = chip->m_opcode;
@@ -330,20 +287,118 @@ void CHIP_8::Op0x8XYE(CHIP_8 *chip) {
 }
 
 void CHIP_8::Op0x9XY0(CHIP_8 *chip) {
-    constexpr uint16_t REG_X = 0x0F00;
-    constexpr uint16_t REG_Y = 0x00F0;
-
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
     const uint8_t regy_indx = (opcode & REG_Y) >> 4;
-    uint16_t amount_to_move = 2;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
 
     if (chip->m_regs_V[regx_indx] !=
         chip->m_regs_V[regy_indx]) {
-        amount_to_move += 2;
+        amount_to_move += SIZE_OF_OPCODE;
     }
     
     chip->m_pc += amount_to_move;
+}
+
+void CHIP_8::Op0xANNN(CHIP_8 *chip) {
+    chip->m_index_reg = chip->m_opcode & ADDR_NNN;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xBNNN(CHIP_8 *chip) {
+    chip->m_pc = chip->m_regs_V[0] + (chip->m_opcode & ADDR_NNN);
+}
+
+void CHIP_8::Op0xCXNN(CHIP_8 *chip) {
+    const uint16_t opcode = chip->m_opcode;
+    const uint16_t regx_indx = (opcode & REG_X) >> 8;
+
+    chip->m_regs_V[regx_indx] = RandomNumber() & (opcode & VAL_NN);
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+inline uint8_t CHIP_8::RandomNumber() {
+    static std::random_device dev;
+    static std::mt19937 gen(dev());
+    static std::uniform_int_distribution<uint16_t> distrib(0, 255);
+
+    return distrib(gen);
+}
+
+void CHIP_8::Op0xFX07(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    chip->m_regs_V[regx_indx] = chip->m_delay_timer;
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX15(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    chip->m_delay_timer = chip->m_regs_V[regx_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX18(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    chip->m_sound_timer = chip->m_regs_V[regx_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX1E(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    chip->m_index_reg += chip->m_regs_V[regx_indx];
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX55(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+    const uint16_t I = chip->m_index_reg;
+    
+    for (uint16_t i = 0; i <= regx_indx; ++i) {
+        chip->m_memory[I + i] = chip->m_regs_V[i];
+    }
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX65(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+    const uint16_t I = chip->m_index_reg;
+
+    for (uint16_t i = 0; i <= regx_indx; ++i) {
+        chip->m_regs_V[i] = chip->m_memory[I + i];
+    }
+
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX33(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+    const uint16_t I = chip->m_index_reg;
+
+    chip->m_memory[I] = chip->m_regs_V[regx_indx] / 100;
+    chip->m_memory[I + 1] = (chip->m_regs_V[regx_indx] / 10) % 10;
+    chip->m_memory[I + 2] = (chip->m_regs_V[regx_indx] % 100) % 10;
+    
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xFX29(CHIP_8 *chip) {
+    constexpr uint8_t FONT_SIZE = 5;
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    chip->m_index_reg = chip->m_regs_V[regx_indx] * FONT_SIZE;
+
+    MoveToNextOp(&(chip->m_pc));
 }
 
 
@@ -354,6 +409,7 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
     {0x1000, &Op0x1NNN},
     {0x2000, &Op0x2NNN},
     {0x00EE, &Op0x00EE},
+    {0xB000, &Op0xBNNN},
 
     // Cond operations 
     {0x3000, &Op0x3XNN},
@@ -379,8 +435,19 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
     {0x8004, &Op0x8XY4},
     {0x8005, &Op0x8XY5},
     {0x8007, &Op0x8XY7},
+
+    // Rand
+    {0xC000, &Op0xCXNN},
     
-    
+    // MEM operations
+    {0xA000, &Op0xANNN},
+    {0xF01E, &Op0xFX1E},
+    {0xF029, &Op0xFX29},
+    {0xF055, &Op0xFX55},
+    {0xF065, &Op0xFX65},
+
+    // BCD
+    {0xF033, Op0xFX33}
 };
 
 const std::array<uint8_t, CHIP_8::NUM_OF_FONTS> CHIP_8::s_font_set =

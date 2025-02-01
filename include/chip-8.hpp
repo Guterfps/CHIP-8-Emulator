@@ -36,6 +36,13 @@ private:
     static constexpr std::size_t NUM_OF_PIXELS = SCREEN_HIGHT * SCREEN_WIDTH;
     static constexpr std::size_t PROGRAM_START_ADDR = 0x200;
     static constexpr std::size_t NUM_OF_FONTS = 80;
+    static constexpr uint16_t SIZE_OF_OPCODE = 2;
+
+    // Opcode masks
+    static constexpr uint16_t ADDR_NNN = 0x0FFF;
+    static constexpr uint16_t VAL_NN = 0x00FF;
+    static constexpr uint16_t REG_X = 0x0F00;
+    static constexpr uint16_t REG_Y = 0x00F0;
     
     std::array<unsigned char, MEMORY_SIZE> m_memory{0};
     std::array<unsigned char, NUM_OF_REGISTERS> m_regs_V{0};
@@ -52,6 +59,7 @@ private:
     static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
     static void MoveToNextOp(uint16_t *pc);
     static uint16_t FindOpcodeTableIndex(uint16_t opcode);
+    static uint8_t RandomNumber();
     
     static void Op0x2NNN(CHIP_8 *chip);
     static void Op0x1NNN(CHIP_8 *chip);
