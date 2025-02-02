@@ -7,6 +7,7 @@
 #include <random>
 
 #include "chip-8.hpp"
+#include "key_pad.hpp"
 
 namespace Emulator
 {
@@ -394,6 +395,7 @@ void CHIP_8::Op0xFX33(CHIP_8 *chip) {
 
 void CHIP_8::Op0xFX29(CHIP_8 *chip) {
     constexpr uint8_t FONT_SIZE = 5;
+
     const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
 
     chip->m_index_reg = chip->m_regs_V[regx_indx] * FONT_SIZE;
@@ -401,7 +403,39 @@ void CHIP_8::Op0xFX29(CHIP_8 *chip) {
     MoveToNextOp(&(chip->m_pc));
 }
 
+void CHIP_8::Op0xEX9E(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
 
+    if (chip->m_key_pad.IsKeyPressed(
+        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0xF))) {
+        amount_to_move += SIZE_OF_OPCODE;
+    }
+
+    chip->m_pc += amount_to_move;    
+}
+
+void CHIP_8::Op0xEXA1(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+    uint16_t amount_to_move = SIZE_OF_OPCODE;
+
+    if (!chip->m_key_pad.IsKeyPressed(
+        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0xF))) {
+        amount_to_move += SIZE_OF_OPCODE;
+    }
+
+    chip->m_pc += amount_to_move;    
+}
+
+void CHIP_8::Op0xFX0A(CHIP_8 *chip) {
+    const uint16_t regx_indx = (chip->m_opcode & REG_X) >> 8;
+
+    const KeyPad::Keys key_pressed = chip->m_key_pad.GetKeyPressed();
+    if (key_pressed < KeyPad::NUM_OF_KEYS) {
+        chip->m_regs_V[regx_indx] = key_pressed;
+        MoveToNextOp(&(chip->m_pc));
+    }
+}
 
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
@@ -438,6 +472,12 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
 
     // Rand
     {0xC000, &Op0xCXNN},
+
+    // Timer
+    {0xF015, &Op0xFX15},
+
+    // Sound
+    {0xF018, &Op0xFX18},
     
     // MEM operations
     {0xA000, &Op0xANNN},
@@ -446,6 +486,11 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
     {0xF055, &Op0xFX55},
     {0xF065, &Op0xFX65},
 
+    // KeyOp
+    {0xE09E, &Op0xEX9E},
+    {0xE0A1, &Op0xEXA1},
+    {0xF00A, &Op0xFX0A},
+    
     // BCD
     {0xF033, Op0xFX33}
 };
