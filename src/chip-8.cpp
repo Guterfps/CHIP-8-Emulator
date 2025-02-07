@@ -1,4 +1,5 @@
 
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <functional>
@@ -69,29 +70,19 @@ inline uint16_t CHIP_8::FindOpcodeTableIndex(uint16_t opcode) {
     switch (table_index)
     {
         case 0x0000:
-        {
             table_index |= opcode & LAST_8_BITS;
             break;
-        }
         case 0x8000:
-        {
             table_index |= opcode & LAST_4_BITS;
             break;
-        }
         case 0xE000:
-        {
             table_index |= opcode & LAST_8_BITS;
             break;
-        }
         case 0xF000:
-        {
             table_index |= opcode & LAST_8_BITS;
             break;
-        }
         default:
-        {
             break;
-        }
     }
 
     return table_index;
@@ -437,6 +428,48 @@ void CHIP_8::Op0xFX0A(CHIP_8 *chip) {
     }
 }
 
+void CHIP_8::Op0x00E0(CHIP_8 *chip) {
+    chip->m_pixels.reset();
+
+    chip->m_draw_flag = true;
+    
+    MoveToNextOp(&(chip->m_pc));
+}
+
+void CHIP_8::Op0xDXYN(CHIP_8 *chip) {
+    uint16_t opcode = chip->m_opcode;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
+    const uint8_t regy_indx = (opcode & REG_Y) >> 4;
+    const uint16_t pos_x = chip->m_regs_V[regx_indx];
+    const uint16_t pos_y = chip->m_regs_V[regy_indx];
+    const uint8_t sprite_hight = opcode & 0x000F;
+    constexpr uint8_t sprite_width = 8;
+    const uint16_t I = chip->m_index_reg; 
+    
+    chip->m_regs_V[0xF] = 0;
+
+    for (size_t row = 0; row < sprite_hight; ++row) {
+        uint8_t sprite_row = chip->m_memory[I + row];
+
+        for (size_t col = 0; col < sprite_width; ++col) {
+            constexpr uint8_t bit_col_mask = 0x80;
+
+            if (0 != (sprite_row & (bit_col_mask >> col))) {
+                size_t pixel_index = pos_x + col +
+                                     ((pos_y + row) * SCREEN_WIDTH);
+                if (chip->m_pixels.test(pixel_index)) {
+                    chip->m_regs_V[0xF] = 1;
+                }
+                chip->m_pixels.flip(pixel_index);
+            }
+        }
+    }
+
+    chip->m_draw_flag = true;
+    
+    MoveToNextOp(&(chip->m_pc));
+}
+
 const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opcode_tabale =
 {
     // Flow operations
@@ -490,6 +523,10 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
     {0xE09E, &Op0xEX9E},
     {0xE0A1, &Op0xEXA1},
     {0xF00A, &Op0xFX0A},
+
+    // Display operations
+    {0x00E0, &Op0x00E0},
+    {0xD000, &Op0xDXYN},
     
     // BCD
     {0xF033, Op0xFX33}

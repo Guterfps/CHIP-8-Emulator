@@ -31,9 +31,9 @@ public:
 private:
     static constexpr std::size_t MEMORY_SIZE = 4096;
     static constexpr std::size_t NUM_OF_REGISTERS = 16;
-    static constexpr std::size_t SCREEN_WIDTH = 32;
-    static constexpr std::size_t SCREEN_HIGHT = 64;
-    static constexpr std::size_t NUM_OF_PIXELS = SCREEN_HIGHT * SCREEN_WIDTH;
+    static constexpr std::size_t SCREEN_WIDTH = 64;
+    static constexpr std::size_t SCREEN_HIGHT = 32;
+    static constexpr std::size_t NUM_OF_PIXELS = SCREEN_WIDTH * SCREEN_HIGHT;
     static constexpr std::size_t PROGRAM_START_ADDR = 0x200;
     static constexpr std::size_t NUM_OF_FONTS = 80;
     static constexpr uint16_t SIZE_OF_OPCODE = 2;
@@ -87,7 +87,6 @@ private:
 
     static void Op0xANNN(CHIP_8 *chip);
     static void Op0xCXNN(CHIP_8 *chip);
-    static void Op0xDXYN(CHIP_8 *chip);
     static void Op0xEX9E(CHIP_8 *chip);
     static void Op0xEXA1(CHIP_8 *chip);
     static void Op0xFX07(CHIP_8 *chip);
@@ -99,6 +98,9 @@ private:
     static void Op0xFX33(CHIP_8 *chip);
     static void Op0xFX55(CHIP_8 *chip);
     static void Op0xFX65(CHIP_8 *chip);
+
+    static void Op0x00E0(CHIP_8 *chip);
+    static void Op0xDXYN(CHIP_8 *chip);
     
     static const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>> s_opcode_tabale;
     static const std::array<uint8_t, NUM_OF_FONTS> s_font_set;

@@ -34,8 +34,11 @@ inline bool KeyPad::IsKeyPressed(Keys key) const {
 }
 
 inline KeyPad::Keys KeyPad::GetKeyPressed() const {
-    // TODO
-    return static_cast<Keys>(0);
+    std::size_t i = 0;
+
+    for (;(i < NUM_OF_KEYS) && (!m_keys.test(i)); ++i);
+    
+    return static_cast<Keys>(i);
 }
 
 }
