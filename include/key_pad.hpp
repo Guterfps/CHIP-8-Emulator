@@ -21,6 +21,7 @@ public:
         NUM_OF_KEYS 
     };
 
+    void SetKey(Keys key, bool pressed);
     bool IsKeyPressed(Keys key) const;
     Keys GetKeyPressed() const;
 
@@ -30,7 +31,7 @@ private:
 };
 
 inline bool KeyPad::IsKeyPressed(Keys key) const {
-    return m_keys[key];
+    return m_keys.test(key);
 }
 
 inline KeyPad::Keys KeyPad::GetKeyPressed() const {
@@ -39,6 +40,10 @@ inline KeyPad::Keys KeyPad::GetKeyPressed() const {
     for (;(i < NUM_OF_KEYS) && (!m_keys.test(i)); ++i);
     
     return static_cast<Keys>(i);
+}
+
+inline void KeyPad::SetKey(KeyPad::Keys key, bool pressed) {
+    m_keys[key] = pressed;
 }
 
 }

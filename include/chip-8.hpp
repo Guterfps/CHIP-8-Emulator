@@ -27,13 +27,22 @@ public:
     Status LoadBin(const char *file_path);
 
     void EmulateCycle();
+    void SetKey(KeyPad::Keys key, bool pressed);
+
+    std::size_t GetScreenWidth() const { return SCREEN_WIDTH; }
+    std::size_t GetScreenHeight() const { return SCREEN_HEIGHT; }
+    bool GetScreenPixel(std::size_t pos) const { return m_pixels.test(pos); }
+    bool IsDraw() const { return m_draw_flag; }
+    bool IsSound() const { return m_sound_flag; }
+    void ResetDraw() { m_draw_flag = false; }
+    void ResetSound() { m_sound_flag = false; }
 
 private:
     static constexpr std::size_t MEMORY_SIZE = 4096;
     static constexpr std::size_t NUM_OF_REGISTERS = 16;
     static constexpr std::size_t SCREEN_WIDTH = 64;
-    static constexpr std::size_t SCREEN_HIGHT = 32;
-    static constexpr std::size_t NUM_OF_PIXELS = SCREEN_WIDTH * SCREEN_HIGHT;
+    static constexpr std::size_t SCREEN_HEIGHT = 32;
+    static constexpr std::size_t NUM_OF_PIXELS = SCREEN_WIDTH * SCREEN_HEIGHT;
     static constexpr std::size_t PROGRAM_START_ADDR = 0x200;
     static constexpr std::size_t NUM_OF_FONTS = 80;
     static constexpr uint16_t SIZE_OF_OPCODE = 2;
@@ -55,11 +64,14 @@ private:
     uint16_t m_delay_timer{0};
     uint16_t m_sound_timer{0};
     bool m_draw_flag{false};
+    bool m_sound_flag{false};
 
     static void LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory);
     static void MoveToNextOp(uint16_t *pc);
     static uint16_t FindOpcodeTableIndex(uint16_t opcode);
     static uint8_t RandomNumber();
+    void TickDelayTimer();
+    void TickSoundTimer();
     
     static void Op0x2NNN(CHIP_8 *chip);
     static void Op0x1NNN(CHIP_8 *chip);

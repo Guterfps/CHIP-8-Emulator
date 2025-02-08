@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <functional>
+#include <ios>
 #include <iostream>
 #include <unordered_map>
 #include <random>
@@ -41,23 +42,19 @@ void CHIP_8::EmulateCycle() {
 
     uint16_t table_index = FindOpcodeTableIndex(m_opcode);
 
-    if (s_opcode_tabale.end() != s_opcode_tabale.find(table_index)) {
+    if (s_opcode_tabale.find(table_index) != s_opcode_tabale.end()) {
         s_opcode_tabale.at(table_index)(this);
     } else {
-        std::cout << "unknown opcode: " << m_opcode << '\n';
+        std::cout << "unknown opcode: "<< std::hex << m_opcode << '\n';
     }
     
+    TickDelayTimer();
+    TickSoundTimer();
+    
+}
 
-    if (m_delay_timer > 0) {
-        --m_delay_timer;
-    }
-    
-    if (m_sound_timer > 0) {
-        if (0 == m_sound_timer) {
-            std::cout << "BEEP!\n";
-        }
-        --m_sound_timer;
-    }
+void CHIP_8::SetKey(KeyPad::Keys key, bool pressed) {
+    m_key_pad.SetKey(key, pressed);
 }
 
 inline uint16_t CHIP_8::FindOpcodeTableIndex(uint16_t opcode) {
@@ -96,6 +93,22 @@ inline void CHIP_8::LoadFonts(std::array<unsigned char, MEMORY_SIZE>& memory) {
 
 inline void CHIP_8::MoveToNextOp(uint16_t *pc) {
     *pc += SIZE_OF_OPCODE;
+}
+
+inline void CHIP_8::TickDelayTimer() {
+    if (m_delay_timer > 0) {
+        --m_delay_timer;
+    }
+}
+
+inline void CHIP_8::TickSoundTimer() {
+    if (m_sound_timer > 0) {
+        if (1 == m_sound_timer) {
+            m_sound_flag = true;
+            std::cout << "BEEP!\n";
+        }
+        --m_sound_timer;
+    }
 }
 
 void CHIP_8::Op0x1NNN(CHIP_8 *chip) {
@@ -457,10 +470,12 @@ void CHIP_8::Op0xDXYN(CHIP_8 *chip) {
             if (0 != (sprite_row & (bit_col_mask >> col))) {
                 size_t pixel_index = pos_x + col +
                                      ((pos_y + row) * SCREEN_WIDTH);
-                if (chip->m_pixels.test(pixel_index)) {
-                    chip->m_regs_V[0xF] = 1;
+                if (pixel_index < NUM_OF_PIXELS) { 
+                    if (chip->m_pixels.test(pixel_index)) {
+                        chip->m_regs_V[0xF] = 1;
+                    }
+                    chip->m_pixels.flip(pixel_index);
                 }
-                chip->m_pixels.flip(pixel_index);
             }
         }
     }
@@ -508,6 +523,7 @@ const std::unordered_map<uint16_t, std::function<void(CHIP_8*)>>  CHIP_8::s_opco
 
     // Timer
     {0xF015, &Op0xFX15},
+    {0xF007, &Op0xFX07},
 
     // Sound
     {0xF018, &Op0xFX18},
