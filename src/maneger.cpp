@@ -1,7 +1,10 @@
 
-#include "maneger.hpp"
-#include "key_pad.hpp"
+#include <cstdint>
 #include <raylib.h>
+
+#include "maneger.hpp"
+#include "chip-8.hpp"
+#include "key_pad.hpp"
 
 namespace Emulator
 {
@@ -9,9 +12,8 @@ namespace Emulator
 Maneger::Maneger()
 : m_chip()
 , m_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, REFRESH_RATE)
-, m_state(EMULATE)
+, m_state(MENU)
 {
-    m_chip.LoadBin("./games/PONG2"); // TODO: load in menu
 }
 
 void Maneger::Run() {
@@ -31,38 +33,56 @@ void Maneger::Run() {
 }
 
 void Maneger::RunMenu() {
-    constexpr float text_box_width = 30;
-    constexpr float text_box_height= 10;
+    constexpr size_t MAX_FILE_PATH = 256;
+    std::array<char, MAX_FILE_PATH> file_path = {0};
+    bool is_valid = true;
     
-    static Rectangle text_box = {
-        WINDOW_WIDTH / 2.0f,
-        WINDOW_HEIGHT / 2.0f,
-        text_box_width,
-        text_box_height    
-    };
+    if (IsFileDropped()) {
+        const FilePathList dropped_file = LoadDroppedFiles();
+        TextCopy(file_path.data(), dropped_file.paths[0]);
+        UnloadDroppedFiles(dropped_file);
+
+        std::cout << "file path: " << file_path.data() << '\n';
+
+        if (CHIP_8::Status::SUCESS ==
+            m_chip.LoadBin(file_path.data())) {
+            m_state = EMULATE;
+        }
+        else {
+            is_valid = false;
+        }
+    }
     
+    BeginDrawing();
+
+    ClearBackground(BLACK);
+    
+    DrawText("Drop a Game File here",
+             WINDOW_WIDTH / 4.0,
+             WINDOW_HEIGHT / 2.0,
+             WINDOW_HEIGHT / 10.0,
+             WHITE);
+
+    if (!is_valid) {
+        DrawText("Invalid File",
+                 WINDOW_WIDTH / 4.0,
+                 WINDOW_HEIGHT / 1.5,
+                 WINDOW_HEIGHT / 10.0,
+                 WHITE);
+    }
+
+    EndDrawing();
 }
 
 void Maneger::RunEmulation() {
     m_chip.EmulateCycle();
 
     if (m_chip.IsDraw()) {
-        BeginDrawing();
-
-        for (size_t row = 0; row < m_chip.GetScreenHeight(); ++row) {
-            for (size_t col = 0; col < m_chip.GetScreenWidth(); ++col) {
-                Color pixel_color =
-                    m_chip.GetScreenPixel(row * m_chip.GetScreenWidth() + col) ?
-                    WHITE : BLACK;
-                DrawRectangle(col * PIXEL_SIZE,
-                              row * PIXEL_SIZE,
-                              PIXEL_SIZE, PIXEL_SIZE,
-                              pixel_color);
-            }
-        }
-
-        EndDrawing();
+        DrawScreen();
         m_chip.ResetDraw();
+    }
+    else {
+        PollInputEvents();
     }
 
     if (m_chip.IsSound()) {
@@ -73,7 +93,32 @@ void Maneger::RunEmulation() {
     TakeInputs();
 }
 
+void Maneger::DrawScreen() {
+    const uint32_t pixel_size = WINDOW_HEIGHT / m_chip.GetScreenHeight();
+
+    BeginDrawing();
+
+    for (size_t row = 0; row < m_chip.GetScreenHeight(); ++row) {
+        for (size_t col = 0; col < m_chip.GetScreenWidth(); ++col) {
+            Color pixel_color =
+                m_chip.GetScreenPixel(row * m_chip.GetScreenWidth() + col) ?
+                WHITE : BLACK;
+            DrawRectangle(col * pixel_size,
+                          row * pixel_size,
+                          pixel_size, pixel_size,
+                          pixel_color);
+        }
+    }
+
+    EndDrawing();
+}
+
 void Maneger::TakeInputs() {
+    PressedKeys();
+    ReleasedKeys();
+}
+
+void Maneger::PressedKeys() {
     if (IsKeyPressed(KEY_ONE)) {
         m_chip.SetKey(KeyPad::KEY_1, true);
     }
@@ -122,7 +167,9 @@ void Maneger::TakeInputs() {
     if (IsKeyPressed(KEY_V)) {
         m_chip.SetKey(KeyPad::KEY_F, true);
     }
+}
 
+void Maneger::ReleasedKeys() {
     if (IsKeyReleased(KEY_ONE)) {
         m_chip.SetKey(KeyPad::KEY_1, false);
     }

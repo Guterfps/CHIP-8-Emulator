@@ -2,9 +2,10 @@
 #ifndef MANEGER_HPP
 #define MANEGER_HPP
 
+#include <cstdint>
+
 #include "chip-8.hpp"
 #include "window.hpp"
-#include <cstdint>
 
 namespace Emulator
 {
@@ -21,7 +22,6 @@ private:
     static constexpr uint32_t WINDOW_HEIGHT = 320;
     static constexpr const char *WINDOW_TITLE = "CHIP-8";
     static constexpr uint32_t REFRESH_RATE = 60;
-    static constexpr uint32_t PIXEL_SIZE = 10;
 
     enum State : uint8_t {MENU = 0, EMULATE};
 
@@ -32,6 +32,9 @@ private:
     void RunMenu();
     void RunEmulation();
     void TakeInputs();
+    void PressedKeys();
+    void ReleasedKeys();
+    void DrawScreen();
     
 };
 

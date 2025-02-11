@@ -28,8 +28,8 @@ CHIP_8::Status CHIP_8::LoadBin(const char *file_path) {
     }
 
     input.read(reinterpret_cast<char*>(&m_memory[PROGRAM_START_ADDR]), MEMORY_SIZE - PROGRAM_START_ADDR);
-    if (!input.good()) {
-        std::cout << "faild to read the file\n";
+    if (!input.fail()) {
+        std::cout << "faild to read the file: " << input.gcount() << '\n';
 
         return Status::ERROR;
     }
@@ -41,9 +41,11 @@ void CHIP_8::EmulateCycle() {
     m_opcode = (m_memory[m_pc] << 8) | m_memory[m_pc + 1];
 
     uint16_t table_index = FindOpcodeTableIndex(m_opcode);
-
-    if (s_opcode_tabale.find(table_index) != s_opcode_tabale.end()) {
-        s_opcode_tabale.at(table_index)(this);
+    const auto table_iter = s_opcode_tabale.find(table_index);
+    
+    if (table_iter != s_opcode_tabale.end()) {
+        table_iter->second(this);
+        //std::cout <<"opcode: " << std::hex << table_index << ", " << std::hex << m_opcode << '\n';
     } else {
         std::cout << "unknown opcode: "<< std::hex << m_opcode << '\n';
     }
@@ -255,9 +257,9 @@ void CHIP_8::Op0x8XY6(CHIP_8 *chip) {
     constexpr uint8_t LSB = 1;
     
     uint16_t opcode = chip->m_opcode;
-    const uint8_t regx_indx = (opcode & REG_X) >> LSB;
+    const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
-    chip->m_regs_V[0x0F] = chip->m_regs_V[regx_indx] & 1;
+    chip->m_regs_V[0x0F] = chip->m_regs_V[regx_indx] & LSB;
 
     chip->m_regs_V[regx_indx] >>= 1;
 
@@ -412,7 +414,7 @@ void CHIP_8::Op0xEX9E(CHIP_8 *chip) {
     uint16_t amount_to_move = SIZE_OF_OPCODE;
 
     if (chip->m_key_pad.IsKeyPressed(
-        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0xF))) {
+        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0x0F))) {
         amount_to_move += SIZE_OF_OPCODE;
     }
 
@@ -424,7 +426,7 @@ void CHIP_8::Op0xEXA1(CHIP_8 *chip) {
     uint16_t amount_to_move = SIZE_OF_OPCODE;
 
     if (!chip->m_key_pad.IsKeyPressed(
-        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0xF))) {
+        static_cast<KeyPad::Keys>(chip->m_regs_V[regx_indx] & 0x0F))) {
         amount_to_move += SIZE_OF_OPCODE;
     }
 
@@ -471,7 +473,7 @@ void CHIP_8::Op0xDXYN(CHIP_8 *chip) {
                 size_t pixel_index = pos_x + col +
                                      ((pos_y + row) * SCREEN_WIDTH);
                 if (pixel_index < NUM_OF_PIXELS) { 
-                    if (chip->m_pixels.test(pixel_index)) {
+                    if (chip->m_pixels[pixel_index]) {
                         chip->m_regs_V[0xF] = 1;
                     }
                     chip->m_pixels.flip(pixel_index);
