@@ -12,6 +12,9 @@ namespace Emulator
 Maneger::Maneger()
 : m_chip()
 , m_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, REFRESH_RATE)
+, m_menu(WINDOW_WIDTH / 4.0f, WINDOW_HEIGHT / 4.0f,
+         WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 10.0f)
+, m_sound(SOUND_FILE_PATH)
 , m_state(MENU)
 {
 }
@@ -33,50 +36,25 @@ void Maneger::Run() {
 }
 
 void Maneger::RunMenu() {
-    constexpr size_t MAX_FILE_PATH = 256;
-    std::array<char, MAX_FILE_PATH> file_path = {0};
-    bool is_valid = true;
-    
-    if (IsFileDropped()) {
-        const FilePathList dropped_file = LoadDroppedFiles();
-        TextCopy(file_path.data(), dropped_file.paths[0]);
-        UnloadDroppedFiles(dropped_file);
+    m_menu.Update();
 
-        std::cout << "file path: " << file_path.data() << '\n';
+    if (IsKeyPressed(KEY_ENTER)) {
+        m_chip = CHIP_8();
 
         if (CHIP_8::Status::SUCESS ==
-            m_chip.LoadBin(file_path.data())) {
+            m_chip.LoadBin(m_menu.GetFilePath())) {
             m_state = EMULATE;
         }
-        else {
-            is_valid = false;
-        }
     }
     
-    BeginDrawing();
-
-    ClearBackground(BLACK);
-    
-    DrawText("Drop a Game File here",
-             WINDOW_WIDTH / 4.0,
-             WINDOW_HEIGHT / 2.0,
-             WINDOW_HEIGHT / 10.0,
-             WHITE);
-
-    if (!is_valid) {
-        DrawText("Invalid File",
-                 WINDOW_WIDTH / 4.0,
-                 WINDOW_HEIGHT / 1.5,
-                 WINDOW_HEIGHT / 10.0,
-                 WHITE);
-    }
-
-    EndDrawing();
+    m_menu.Draw();
 }
 
 void Maneger::RunEmulation() {
     m_chip.EmulateCycle();
 
+    TakeInputs();
+    
     if (m_chip.IsDraw()) {
         DrawScreen();
         m_chip.ResetDraw();
@@ -86,11 +64,9 @@ void Maneger::RunEmulation() {
     }
 
     if (m_chip.IsSound()) {
-
+        m_sound.Play();
         m_chip.ResetSound();
     }
-
-    TakeInputs();
 }
 
 void Maneger::DrawScreen() {
@@ -116,6 +92,10 @@ void Maneger::DrawScreen() {
 void Maneger::TakeInputs() {
     PressedKeys();
     ReleasedKeys();
+
+    if (IsKeyPressed(KEY_TAB)) {
+        m_state = MENU;
+    }
 }
 
 void Maneger::PressedKeys() {

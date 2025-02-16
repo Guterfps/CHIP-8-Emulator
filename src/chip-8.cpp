@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <fstream>
 #include <functional>
-#include <ios>
 #include <iostream>
 #include <unordered_map>
 #include <random>
@@ -45,7 +44,7 @@ void CHIP_8::EmulateCycle() {
     
     if (table_iter != s_opcode_tabale.end()) {
         table_iter->second(this);
-        //std::cout <<"opcode: " << std::hex << table_index << ", " << std::hex << m_opcode << '\n';
+        std::cout <<"opcode: " << std::hex << table_index << ", " << std::hex << m_opcode << '\n';
     } else {
         std::cout << "unknown opcode: "<< std::hex << m_opcode << '\n';
     }
