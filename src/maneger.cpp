@@ -86,6 +86,10 @@ void Maneger::DrawScreen() {
         }
     }
 
+    if (m_show_fps) {
+        DrawFPS(10, 10);
+    }
+
     EndDrawing();
 }
 
@@ -96,6 +100,9 @@ void Maneger::TakeInputs() {
     if (IsKeyPressed(KEY_TAB)) {
         m_state = MENU;
     }
+
+    m_show_fps ^= IsKeyPressed(KEY_LEFT_SHIFT);
+    
 }
 
 void Maneger::PressedKeys() {

@@ -33,6 +33,7 @@ private:
     Menu m_menu;
     SoundEffect m_sound;
     State m_state;
+    bool m_show_fps{false};
 
     void RunMenu();
     void RunEmulation();
