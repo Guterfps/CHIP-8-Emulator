@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
+#include <chrono>
 
 #include "stack.hpp"
 #include "key_pad.hpp"
@@ -46,6 +47,7 @@ private:
     static constexpr std::size_t PROGRAM_START_ADDR = 0x200;
     static constexpr std::size_t NUM_OF_FONTS = 80;
     static constexpr uint16_t SIZE_OF_OPCODE = 2;
+    static constexpr double TIMERS_SPEED_IN_SEC = 1.0 / 60.0;
 
     // Opcode masks
     static constexpr uint16_t ADDR_NNN = 0x0FFF;
@@ -63,6 +65,7 @@ private:
     uint16_t m_opcode{0};
     uint16_t m_delay_timer{0};
     uint16_t m_sound_timer{0};
+    std::chrono::time_point<std::chrono::steady_clock> m_time;
     bool m_draw_flag{false};
     bool m_sound_flag{false};
 
@@ -72,6 +75,8 @@ private:
     static uint8_t RandomNumber();
     void TickDelayTimer();
     void TickSoundTimer();
+    bool IsTimerTick();
+    double SecondsPassed();
     
     static void Op0x2NNN(CHIP_8 *chip);
     static void Op0x1NNN(CHIP_8 *chip);

@@ -13,7 +13,7 @@
 namespace Emulator
 {
 
-CHIP_8::CHIP_8()
+CHIP_8::CHIP_8() : m_time(std::chrono::steady_clock::now())
 {   
     LoadFonts(m_memory);
 }
@@ -41,17 +41,18 @@ void CHIP_8::EmulateCycle() {
 
     uint16_t table_index = FindOpcodeTableIndex(m_opcode);
     const auto table_iter = s_opcode_tabale.find(table_index);
-    
+
     if (table_iter != s_opcode_tabale.end()) {
         table_iter->second(this);
         std::cout <<"opcode: " << std::hex << table_index << ", " << std::hex << m_opcode << '\n';
     } else {
         std::cout << "unknown opcode: "<< std::hex << m_opcode << '\n';
     }
-    
-    TickDelayTimer();
-    TickSoundTimer();
-    
+
+    if (IsTimerTick()) {
+        TickDelayTimer();
+        TickSoundTimer();
+    }
 }
 
 void CHIP_8::SetKey(KeyPad::Keys key, bool pressed) {
@@ -104,12 +105,20 @@ inline void CHIP_8::TickDelayTimer() {
 
 inline void CHIP_8::TickSoundTimer() {
     if (m_sound_timer > 0) {
-        if (1 == m_sound_timer) {
-            m_sound_flag = true;
-            std::cout << "BEEP!\n";
-        }
+        m_sound_flag = true;
         --m_sound_timer;
     }
+}
+
+inline bool CHIP_8::IsTimerTick() {
+    return (SecondsPassed() >= TIMERS_SPEED_IN_SEC);
+}
+
+inline double CHIP_8::SecondsPassed() {
+    std::chrono::time_point<std::chrono::steady_clock> cur_time{std::chrono::steady_clock::now()};
+    std::chrono::duration<double> elapsed_secs{cur_time - m_time};
+
+    return elapsed_secs.count();
 }
 
 void CHIP_8::Op0x1NNN(CHIP_8 *chip) {
@@ -285,7 +294,7 @@ void CHIP_8::Op0x8XYE(CHIP_8 *chip) {
     uint16_t opcode = chip->m_opcode;
     const uint8_t regx_indx = (opcode & REG_X) >> 8;
 
-    chip->m_regs_V[0x0F] = chip->m_regs_V[regx_indx] & MSB;
+    chip->m_regs_V[0x0F] = (chip->m_regs_V[regx_indx] & MSB) >> 7;
 
     chip->m_regs_V[regx_indx] <<= 1;
 
