@@ -74,7 +74,7 @@ pub fn build(b: *std.Build) void {
 
     // add a step called "cdb" (Compile commands DataBase) for making
     // compile_commands.json. could be named anything. cdb is just quick to type
-    zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+    // zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
