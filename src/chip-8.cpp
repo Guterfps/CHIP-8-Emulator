@@ -52,6 +52,7 @@ void CHIP_8::EmulateCycle() {
     if (IsTimerTick()) {
         TickDelayTimer();
         TickSoundTimer();
+        m_time = std::chrono::steady_clock::now();
     }
 }
 
