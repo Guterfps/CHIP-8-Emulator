@@ -21,7 +21,10 @@ private:
 
 inline Window::Window(uint32_t width, uint32_t height, const char *title, uint32_t fps) {
     InitWindow(width, height, title);
+
+#if !defined(PLATFORM_WEB)
     SetTargetFPS(fps);
+#endif
 }
 
 inline Window::~Window() {

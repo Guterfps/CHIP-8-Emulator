@@ -2,6 +2,10 @@
 #include <cstdint>
 #include <raylib.h>
 
+#if defined(PLATFORM_WEB)
+    #include <emscripten/emscripten.h>
+#endif
+
 #include "maneger.hpp"
 #include "chip-8.hpp"
 #include "key_pad.hpp"
@@ -20,18 +24,33 @@ Maneger::Maneger()
 }
 
 void Maneger::Run() {
+
+#if defined(PLATFORM_WEB)
+    emscripten_set_main_loop_arg(reinterpret_cast<void (*)(void *)>(&Maneger::LoopWraper),
+                                 this, 0 , 1);
+#else
     while (!WindowShouldClose()) {
-        switch (m_state)
-        {
-            case MENU:
-                RunMenu();
-                break;    
-            case EMULATE:
-                RunEmulation();
-                break;
-            default:
-                break;
-        }
+        LoopFunc();
+    }
+#endif
+
+}
+
+void Maneger::LoopWraper(Maneger *self) {
+    self->LoopFunc();
+}
+
+void Maneger::LoopFunc() {
+    switch (m_state)
+    {
+        case MENU:
+            RunMenu();
+            break;    
+        case EMULATE:
+            RunEmulation();
+            break;
+        default:
+            break;
     }
 }
 
@@ -51,17 +70,14 @@ void Maneger::RunMenu() {
 }
 
 void Maneger::RunEmulation() {
-    m_chip.EmulateCycle();
-
-    TakeInputs();
-    
-    if (m_chip.IsDraw()) {
-        DrawScreen();
-        m_chip.ResetDraw();
-    }
-    else {
+    while (!m_chip.IsDraw() && (m_state == EMULATE)) {
+        TakeInputs();
         PollInputEvents();
+        m_chip.EmulateCycle();
     }
+    
+    DrawScreen();
+    m_chip.ResetDraw();
 
     if (m_chip.IsSound()) {
         m_sound.Play();

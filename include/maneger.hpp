@@ -41,6 +41,9 @@ private:
     void PressedKeys();
     void ReleasedKeys();
     void DrawScreen();
+
+    void LoopFunc();
+    static void LoopWraper(Maneger *self);
     
 };
 
