@@ -40,7 +40,7 @@ There is a compiled linux x86_64 binary at zig-out/bin/ folder.
 
 ### Web Version
 
-A web version of the emulator is available at: [https://guterfps.github.io/CHIP-8-Emulator/]
+A web version of the emulator is available [here](https://guterfps.github.io/CHIP-8-Emulator/).
 
 ### Prerequisites
 
@@ -61,14 +61,14 @@ zig build
 # Build the WebAssembly version with Emscripten
 ./build_for_web.sh
 ```
-You will also need to compile raylib to wasm(see raylib docs[https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5)]).
+You will also need to compile raylib to wasm(see raylib [docs](https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5))).
 
 ## Usage
 
 ### Desktop Version
 
 ```
-./chip8
+./CHIP-8-Emulator
 ```
 
 The emulator launches with a text input menu where you can enter the path to a ROM file.
