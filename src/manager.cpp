@@ -1,19 +1,18 @@
 
-#include <cstdint>
 #include <raylib.h>
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
 
-#include "maneger.hpp"
+#include "manager.hpp"
 #include "chip-8.hpp"
 #include "key_pad.hpp"
 
 namespace Emulator
 {
 
-Maneger::Maneger()
+Manager::Manager()
 : m_chip()
 , m_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, REFRESH_RATE)
 , m_menu(WINDOW_WIDTH / 4.0f, WINDOW_HEIGHT / 4.0f,
@@ -23,7 +22,7 @@ Maneger::Maneger()
 {
 }
 
-void Maneger::Run() {
+void Manager::Run() {
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop_arg(reinterpret_cast<void (*)(void *)>(&Maneger::LoopWraper),
@@ -36,11 +35,11 @@ void Maneger::Run() {
 
 }
 
-void Maneger::LoopWraper(Maneger *self) {
+void Manager::LoopWraper(Manager *self) {
     self->LoopFunc();
 }
 
-void Maneger::LoopFunc() {
+void Manager::LoopFunc() {
     switch (m_state)
     {
         case MENU:
@@ -54,7 +53,7 @@ void Maneger::LoopFunc() {
     }
 }
 
-void Maneger::RunMenu() {
+void Manager::RunMenu() {
     m_menu.Update();
 
     if (IsKeyPressed(KEY_ENTER)) {
@@ -69,7 +68,7 @@ void Maneger::RunMenu() {
     m_menu.Draw();
 }
 
-void Maneger::RunEmulation() {
+void Manager::RunEmulation() {
     while (!m_chip.IsDraw() && (m_state == EMULATE)) {
         TakeInputs();
         PollInputEvents();
@@ -85,7 +84,7 @@ void Maneger::RunEmulation() {
     }
 }
 
-void Maneger::DrawScreen() {
+void Manager::DrawScreen() {
     const uint32_t pixel_size = WINDOW_HEIGHT / m_chip.GetScreenHeight();
 
     BeginDrawing();
@@ -109,7 +108,7 @@ void Maneger::DrawScreen() {
     EndDrawing();
 }
 
-void Maneger::TakeInputs() {
+void Manager::TakeInputs() {
     PressedKeys();
     ReleasedKeys();
 
@@ -121,7 +120,7 @@ void Maneger::TakeInputs() {
     
 }
 
-void Maneger::PressedKeys() {
+void Manager::PressedKeys() {
     if (IsKeyPressed(KEY_ONE)) {
         m_chip.SetKey(KeyPad::KEY_1, true);
     }
@@ -172,7 +171,7 @@ void Maneger::PressedKeys() {
     }
 }
 
-void Maneger::ReleasedKeys() {
+void Manager::ReleasedKeys() {
     if (IsKeyReleased(KEY_ONE)) {
         m_chip.SetKey(KeyPad::KEY_1, false);
     }

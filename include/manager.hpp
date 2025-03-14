@@ -1,6 +1,6 @@
 
-#ifndef MANEGER_HPP
-#define MANEGER_HPP
+#ifndef MANAGER_HPP
+#define MANAGER_HPP
 
 #include <cstdint>
 
@@ -12,10 +12,10 @@
 namespace Emulator
 {
 
-class Maneger
+class Manager
 {
 public:
-    Maneger();
+    Manager();
 
     void Run();
 
@@ -43,10 +43,10 @@ private:
     void DrawScreen();
 
     void LoopFunc();
-    static void LoopWraper(Maneger *self);
+    static void LoopWraper(Manager *self);
     
 };
 
 }
 
-#endif // MANEGER_HPP
+#endif // MANAGER_HPP

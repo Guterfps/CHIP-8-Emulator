@@ -1,8 +1,8 @@
 
-#include "maneger.hpp"
+#include "manager.hpp"
 
 int main(void) {
-    Emulator::Maneger emulator;
+    Emulator::Manager emulator;
 
     emulator.Run();
 
